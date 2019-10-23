@@ -1,5 +1,9 @@
 /workspace.xml
-.idea/
-__pycache__/
+.idea/*
+__pycache__/*
 */__pycache__*
-weights/
+weights/*
+lab_dataset/*
+lab_dataset.zip
+custom_data.zip
+test.py
