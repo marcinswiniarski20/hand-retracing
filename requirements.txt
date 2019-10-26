@@ -2,7 +2,7 @@
 Cython
 numpy
 opencv-python
-torch
+torch==1.2
 matplotlib
 # pycocotools
 tqdm
