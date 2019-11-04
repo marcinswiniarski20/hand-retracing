@@ -11,10 +11,11 @@ from inference_utils import *
 from sort import Sort
 
 import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def detect():
+def detect(args, robot):
     weights, source, img_size, one_hand = args.weights, args.source, args.img_size, args.one_hand
     device = select_device(use_cpu=False, enable_benchmark=True)
     model = Darknet(args.cfg, img_size)
@@ -27,11 +28,12 @@ def detect():
 
     # Get classes and colors
     classes = load_class_names(parse_data_cfg(args.data)['names'])
-    colors = [[random.randint(0, 255) for _ in range(3)] for _ in range(len(classes)+1)]
+    colors = [[random.randint(0, 255) for _ in range(3)] for _ in
+              range(len(classes) + 1)]
 
     if source == "0":
         source = 0
-    cap = cv2.VideoCapture(source)
+    cap = cv2.VideoCapture(0)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not cap.isOpened():
         print("Error opening video stream!")
@@ -50,36 +52,48 @@ def detect():
             img = preprocess_image(frame, img_size, half)
             img = torch.from_numpy(img).unsqueeze(0).to(device)
             pred, _ = model(img)
-            det = non_max_suppression(pred.float(), args.conf_thres, args.nms_thres)[0]
+            det = \
+            non_max_suppression(pred.float(), args.conf_thres, args.nms_thres)[
+                0]
 
             if args.one_hand and det is not None and det.shape[0] > 1:
                 det = torch.unsqueeze(max(det, key=itemgetter(5)), 0)
 
             if det is not None and len(det):
                 # Rescale boxes from img_size to im0 size
-                det[:, :4] = scale_coords(img.shape[2:], det[:, :4], frame.shape).round()
+                det[:, :4] = scale_coords(img.shape[2:], det[:, :4],
+                                          frame.shape).round()
                 tracked_objects = tracker.update(det[:, :5].cpu())
 
                 for *xyxy, conf, _, cls in det:
                     label = f"{classes[int(cls)]} {conf:.2f}"
-                    plot_one_box(xyxy, frame, label=label, color=colors[int(cls)])
+                    plot_one_box(xyxy, frame, label=label,
+                                 color=colors[int(cls)])
 
                 for i, obj in enumerate(tracked_objects):
                     if len(tracked_objects) == 1 and obj[-1] != 1:
                         tracked_objects[i][-1] = 1
                     if len(last_objects) > 1:
                         for k_objs in last_objects:
-                            if len(k_objs) == len(tracked_objects) and obj[-1] != k_objs[i][-1]:
-                                euc_dist = np.sqrt(np.sum((k_objs - obj) ** 2, axis=1))
-                                if obj[-1] != k_objs[np.argmin(euc_dist)][-1] and k_objs[np.argmin(euc_dist)][-1] not in tracked_objects[:, -1]:
-                                    tracked_objects[i][-1] = k_objs[np.argmin(euc_dist)][-1]
+                            if len(k_objs) == len(tracked_objects) and obj[
+                                -1] != k_objs[i][-1]:
+                                euc_dist = np.sqrt(
+                                    np.sum((k_objs - obj) ** 2, axis=1))
+                                if obj[-1] != k_objs[np.argmin(euc_dist)][
+                                    -1] and k_objs[np.argmin(euc_dist)][
+                                    -1] not in tracked_objects[:, -1]:
+                                    tracked_objects[i][-1] = \
+                                    k_objs[np.argmin(euc_dist)][-1]
 
-                    plot_one_box(obj, frame, label=f"id: {obj[-1]}", color=colors[int(cls)+1])
+                    plot_one_box(obj, frame, label=f"id: {obj[-1]}",
+                                 color=colors[int(cls) + 1])
 
-                    if obj[-1] == 1 and args.show_centres:
+                    if obj[-1] == 1:
                         x_c, y_c = get_centres(obj[:4])
                         frame[y_c:y_c + 5, x_c:x_c + 5] = [0, 0, 255]
-                        print(x_c, y_c)
+                        # print(x_c, y_c)
+                        robot.set_y_pos(x_c)
+                        robot.set_z_pos(y_c)
                 last_objects.insert(0, tracked_objects)
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
@@ -94,21 +108,37 @@ def detect():
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3_hand-spp.cfg', help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/ego.data', help='.data file path')
-    parser.add_argument('--weights', type=str, default='weights/full_dataset.pt', help='path to weights file')
-    parser.add_argument('--source', type=str, default='data/two_hands_test.mp4', help='source')
-    parser.add_argument('--img-size', type=int, default=416, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.65, help='object confidence threshold')
-    parser.add_argument('--nms-thres', type=float, default=0.5, help='iou threshold for non-maximum suppression')
-    parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
+    parser.add_argument('--cfg', type=str, default='cfg/yolov3_hand-spp.cfg',
+                        help='cfg file path')
+    parser.add_argument('--data', type=str, default='data/ego.data',
+                        help='.data file path')
+    parser.add_argument('--weights', type=str,
+                        default='weights/full_dataset.pt',
+                        help='path to weights file')
+    parser.add_argument('--source', type=str, default='data/two_hands_test.mp4',
+                        help='source')
+    parser.add_argument('--img-size', type=int, default=416,
+                        help='inference size (pixels)')
+    parser.add_argument('--conf-thres', type=float, default=0.65,
+                        help='object confidence threshold')
+    parser.add_argument('--nms-thres', type=float, default=0.5,
+                        help='iou threshold for non-maximum suppression')
+    parser.add_argument('--half', action='store_true',
+                        help='half precision FP16 inference')
     parser.add_argument('--one-hand', action='store_true', default=False,
-                        help='detect only one hand with the best prediction', dest='one_hand')
-    parser.add_argument('--skip-frames', type=int, default=3, help='take every k-th frame for calculation')
+                        help='detect only one hand with the best prediction',
+                        dest='one_hand')
+    parser.add_argument('--skip-frames', type=int, default=3,
+                        help='take every k-th frame for calculation')
     parser.add_argument('--show-centres', action='store_true', default=False,
                         help='print centres of detection and draw it on frame')
     return parser.parse_args()
 
+
+def main(robot):
+    args = parse_args()
+    with torch.no_grad():
+        detect(args, robot)
 
 if __name__ == '__main__':
     args = parse_args()
