@@ -10,12 +10,17 @@ from models import Darknet
 from inference_utils import *
 from sort import Sort
 
+from Classes.serv_v2 import ComServer
+from Classes.Robot import Robot
+from Classes.CommandParser import CommandParser
+from threading import Thread
+
 import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def detect(args, robot):
+def detect(args, server, interval=1):
     weights, source, img_size, one_hand = args.weights, args.source, args.img_size, args.one_hand
     device = select_device(use_cpu=False, enable_benchmark=True)
     model = Darknet(args.cfg, img_size)
@@ -45,6 +50,7 @@ def detect(args, robot):
     counter = 1
     last_objects = []
     while cap.isOpened():
+        time.sleep(interval)
         start_inference = time.time()
         ret, frame = cap.read()
         if ret is True and counter % args.skip_frames == 0:
@@ -53,8 +59,9 @@ def detect(args, robot):
             img = torch.from_numpy(img).unsqueeze(0).to(device)
             pred, _ = model(img)
             det = \
-            non_max_suppression(pred.float(), args.conf_thres, args.nms_thres)[
-                0]
+                non_max_suppression(pred.float(), args.conf_thres,
+                                    args.nms_thres)[
+                    0]
 
             if args.one_hand and det is not None and det.shape[0] > 1:
                 det = torch.unsqueeze(max(det, key=itemgetter(5)), 0)
@@ -83,7 +90,7 @@ def detect(args, robot):
                                     -1] and k_objs[np.argmin(euc_dist)][
                                     -1] not in tracked_objects[:, -1]:
                                     tracked_objects[i][-1] = \
-                                    k_objs[np.argmin(euc_dist)][-1]
+                                        k_objs[np.argmin(euc_dist)][-1]
 
                     plot_one_box(obj, frame, label=f"id: {obj[-1]}",
                                  color=colors[int(cls) + 1])
@@ -91,9 +98,11 @@ def detect(args, robot):
                     if obj[-1] == 1:
                         x_c, y_c = get_centres(obj[:4])
                         frame[y_c:y_c + 5, x_c:x_c + 5] = [0, 0, 255]
-                        # print(x_c, y_c)
-                        robot.set_y_pos(x_c)
-                        robot.set_z_pos(y_c)
+                        print(x_c, y_c)
+                        server.send_data(
+                            'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1190))
+                        # robot.set_y_pos(x_c)
+                        # robot.set_z_pos(y_c)
                 last_objects.insert(0, tracked_objects)
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
@@ -135,12 +144,27 @@ def parse_args():
     return parser.parse_args()
 
 
-def main(robot):
-    args = parse_args()
-    with torch.no_grad():
-        detect(args, robot)
-
 if __name__ == '__main__':
     args = parse_args()
-    with torch.no_grad():
-        detect()
+    robot = Robot()
+    parser = CommandParser(robot)
+    server = ComServer(robot)
+
+    server_receive_thread = Thread(target=server.receive_thread)
+    server_receive_thread.start()
+    x = 9
+    while x != 10:
+        time.sleep(0.2)
+        command = input('>>> ')
+        if server.connection is None:
+            print('There\'s no client connected. '
+                  'Keep waiting for connection...')
+            continue
+
+        command = parser.check_users_message_correctness(command)
+        if command == 'RETRACE':
+            detect(args, server)
+        elif command:
+            server.send_data(command)
+
+        print(robot.p_home)

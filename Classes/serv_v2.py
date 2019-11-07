@@ -1,6 +1,6 @@
 import socket
 
-from threading import Timer, Thread
+from threading import Thread
 
 
 class ComServer:
@@ -19,10 +19,9 @@ class ComServer:
         - client_ip
         - server_running
         - obtained_data
-        - checking_permitted
     """
 
-    def __init__(self, port=10002):
+    def __init__(self, robot, port=10002):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.communication_adapter_ip = self.get_hardware_ip()
         self.communication_port = port
@@ -31,7 +30,8 @@ class ComServer:
         self.connection = None
         self.client_ip = None
         self.server_running = False
-        self.checking_permitted = False
+        self.robot = robot
+        self.run_server()
 
     def run_server(self):
         if self.server_running:
@@ -42,6 +42,8 @@ class ComServer:
 
         print('Server Started!\n'
               'Server info:\n  IP: {}\n  PORT: {}'.format(*self.server_info))
+
+        self.wait_for_client()
 
     def wait_for_client(self):
         if not self.server_running:
@@ -57,29 +59,14 @@ class ComServer:
 
         print('Succesfully connected to {}'.format(self.client_ip))
 
-        self.checking_permitted = True
-        self.check_connection_timer = \
-            Timer(2, function=self.check_connection).start()
-
-    def check_connection(self):
-        if self.checking_permitted:
-            self.connection.settimeout(0.001)
-            try:
-                self.connection.sendall('CHK'.encode('utf-8'))
-            except ConnectionAbortedError:
-                print('Connection has been aborted!')
-                self.client_disconnected()
-            except socket.timeout:
-                self.check_connection_timer = \
-                    Timer(2, function=self.check_connection).start()
-            else:
-                self.check_connection_timer = \
-                    Timer(2, function=self.check_connection).start()
-            finally:
-                self.connection.settimeout(0.2)
-        else:
-            self.check_connection_timer = \
-                Timer(2, function=self.check_connection).start()
+        # send_loop = Thread(target=self.send_thread)
+        # receive_loop = Thread(target=self.receive_thread)
+        #
+        # send_loop.start()
+        # receive_loop.start()
+        #
+        # send_loop.join()
+        # receive_loop.join()
 
     def receive_data(self):
         self.connection.settimeout(0.2)
@@ -93,22 +80,42 @@ class ComServer:
             return obtained_data.decode('utf-8')
 
     def send_data(self, command):
-        self.checking_permitted = False
         command = command.encode('utf-8')
         try:
             self.connection.sendall(command)
         except ConnectionAbortedError:
-            return None
-        else:
-            reply = self.receive_data()
-            self.checking_permitted = True
-            return reply
+            self.client_disconnected()
 
     def client_disconnected(self):
         self.connection = None
         self.client_ip = None
-        self.checking_permitted = False
         self.wait_for_client()
+
+    def receive_thread(self):
+        while True:
+            try:
+                received_data = self.connection.recv(128)
+            except ConnectionResetError:
+                self.client_disconnected()
+                break
+            else:
+                received_data = received_data.decode('utf-8')
+                if len(received_data) > 0:
+                    print(received_data)
+                    if received_data[:3] == 'HOM':
+                        self.robot.p_home = received_data[6:]
+
+                else:
+                    self.client_disconnected()
+
+    def send_thread(self):
+        while True:
+            try:
+                command = input('Give command: ').encode('utf-8')
+                self.connection.sendall(command)
+            except ConnectionAbortedError:
+                self.client_disconnected()
+                break
 
     def get_hardware_ip(self):
         """
@@ -127,6 +134,3 @@ if __name__ == '__main__':
     server = ComServer()
     server.run_server()
     server.wait_for_client()
-
-    while True:
-        print(server.send_data(input('Give command: ')))

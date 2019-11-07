@@ -148,3 +148,6 @@
 2019:11:03 19:37:26	:Syntax check Error
 	:Program	:PRECEIVE(Command:36)	:Dawid sie uczy	:Robot	:36        Else GoSub *MAINLOOP	:Syntax error
 	:Program	:PRECEIVE(Command:38)	:Dawid sie uczy	:Robot	:38    Else GoSub *MAINLOOP	:Syntax error
+2019:11:07 01:15:13	:No syntax error.
+2019:11:07 01:19:08	:No syntax error.
+2019:11:07 01:26:19	:No syntax error.

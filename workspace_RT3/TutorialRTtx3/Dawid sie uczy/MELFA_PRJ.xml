@@ -49,10 +49,10 @@
 		</Screen392>
 		<Screen490>
 			<AdditionalInfo/>
-			<Left>3190</Left>
-			<Top>687</Top>
-			<Right>3503</Right>
-			<Bottom>1000</Bottom>
+			<Left>3203</Left>
+			<Top>465</Top>
+			<Right>3516</Right>
+			<Bottom>1030</Bottom>
 		</Screen490>
 		<Screen392>
 			<AdditionalInfo>ACC</AdditionalInfo>
@@ -126,10 +126,10 @@
 		</Screen2078>
 		<Screen392>
 			<AdditionalInfo>PRECEIVE</AdditionalInfo>
-			<Left>632</Left>
-			<Top>-11</Top>
-			<Right>1985</Right>
-			<Bottom>709</Bottom>
+			<Left>-1</Left>
+			<Top>-5</Top>
+			<Right>1416</Right>
+			<Bottom>883</Bottom>
 		</Screen392>
 		<Screen392>
 			<AdditionalInfo>PRECEIVE.prg</AdditionalInfo>
@@ -138,12 +138,20 @@
 			<Right>997</Right>
 			<Bottom>679</Bottom>
 		</Screen392>
+		<Screen392>
+			<AdditionalInfo>ZONE</AdditionalInfo>
+			<Left>78</Left>
+			<Top>78</Top>
+			<Right>718</Right>
+			<Bottom>478</Bottom>
+		</Screen392>
 	</ScreenRect>
 	<ProjComment>https://www.youtube.com/watch?v=AnUggzYp_Z0</ProjComment>
 	<RCtype>3</RCtype>
 	<MECHA1>RV-12SDL</MECHA1>
 	<RLNG>2</RLNG>
-	<Localization> </Localization>
+	<Localization>
+	</Localization>
 	<Travel_prm_set>0</Travel_prm_set>
 	<Travel_use>0</Travel_use>
 	<Travel_direct>0</Travel_direct>

@@ -1,50 +1,31 @@
-import threading
-from inference import main
-
+from Classes.serv_v2 import ComServer
 from Classes.Robot import Robot
-from Classes.Server import ServerRobot
-from functools import partial
+from Classes.CommandParser import CommandParser
+from threading import Thread
 
+from time import sleep
+from inference import parse_args, detect
 
-class Application:
+args = parse_args()
+robot = Robot()
+parser = CommandParser(robot)
+server = ComServer(robot)
 
-    def __init__(self):
-        self.robot = Robot()
-        self.serv = ServerRobot()
+server_receive_thread = Thread(target=server.receive_thread)
+server_receive_thread.start()
+x = 9
+while x != 10:
+    sleep(0.2)
+    command = input('>>> ')
+    if server.connection is None:
+        print('There\'s no client connected. '
+              'Keep waiting for connection...')
+        continue
 
-        self.detection_thread = threading.Thread(
-            target=partial(main, self.robot))
-        self.communication_thread = threading.Thread(target=self.send_loop)
+    command = parser.check_users_message_correctness(command)
+    if command == 'RETRACE':
+        detect(args, server)
+    elif command:
+        server.send_data(command)
 
-        self.detection_thread.start()
-
-        self.communication_thread.start()
-
-        self.detection_thread.join()
-        self.communication_thread.join()
-
-    def send_loop(self):
-        while True:
-            message = input('Give command: ')
-            if message[:3] == 'MOV':
-                received_message = self.serv.send_message(message,
-                                                          verbose=False)
-                print(received_message)
-                self.check_connection_timer = \
-                    threading.Timer(10, function=self.printka).start()
-                break
-            received_message = self.serv.send_message(message, verbose=False)
-            print(received_message)
-
-    def printka(self):
-        y = 300 - self.robot.y_pos
-        z = 990 + 200 - self.robot.z_pos
-
-        self.serv.send_message('SET {:>5} {:>5}'.format(y, z))
-
-        self.check_connection_timer = \
-            threading.Timer(0.2, function=self.printka).start()
-
-
-if __name__ == '__main__':
-    app = Application()
+    print(robot.p_home)

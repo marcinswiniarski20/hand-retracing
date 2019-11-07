@@ -1,0 +1,8 @@
+2019:11:07 01:02:20	:Find"temp"
+	:Program	:ZONE(Command:12)	:Dawid sie uczy	:Robot	:Def Inte temp
+	:Program	:ZONE(Command:49)	:Dawid sie uczy	:Robot	:    temp% = 1
+	:Program	:ZONE(Position:)	:Dawid sie uczy	:Robot	:'temp' not found.
+2019:11:07 01:02:21	:Find"temp"
+	:Program	:ZONE(Command:12)	:Dawid sie uczy	:Robot	:Def Inte temp
+	:Program	:ZONE(Command:49)	:Dawid sie uczy	:Robot	:    temp% = 1
+	:Program	:ZONE(Position:)	:Dawid sie uczy	:Robot	:'temp' not found.
