@@ -31,6 +31,8 @@ class ComServer:
         self.client_ip = None
         self.server_running = False
         self.robot = robot
+
+        self.receiving_available = True
         self.run_server()
 
     def run_server(self):
@@ -58,6 +60,8 @@ class ComServer:
         self.connection, self.client_ip = self.sock.accept()
 
         print('Succesfully connected to {}'.format(self.client_ip))
+
+        self.receiving_available = True
 
         # send_loop = Thread(target=self.send_thread)
         # receive_loop = Thread(target=self.receive_thread)
@@ -92,12 +96,15 @@ class ComServer:
         self.wait_for_client()
 
     def receive_thread(self):
-        while True:
+        self.connection.settimeout(0.1)
+        while self.receiving_available:
             try:
                 received_data = self.connection.recv(128)
             except ConnectionResetError:
                 self.client_disconnected()
                 break
+            except socket.timeout:
+                pass
             else:
                 received_data = received_data.decode('utf-8')
                 if len(received_data) > 0:

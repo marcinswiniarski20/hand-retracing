@@ -38,7 +38,7 @@ def detect(args, server, interval=1):
 
     if source == "0":
         source = 0
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(args.source)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not cap.isOpened():
         print("Error opening video stream!")
@@ -48,10 +48,10 @@ def detect(args, server, interval=1):
 
     tracker = Sort(min_hits=1)
     counter = 1
+    sending_freq_counter = 1
     last_objects = []
     while cap.isOpened():
-        time.sleep(interval)
-        start_inference = time.time()
+        # start_inference = time.time()
         ret, frame = cap.read()
         if ret is True and counter % args.skip_frames == 0:
             # Get detections
@@ -82,8 +82,7 @@ def detect(args, server, interval=1):
                         tracked_objects[i][-1] = 1
                     if len(last_objects) > 1:
                         for k_objs in last_objects:
-                            if len(k_objs) == len(tracked_objects) and obj[
-                                -1] != k_objs[i][-1]:
+                            if len(k_objs) == len(tracked_objects) and obj[-1] != k_objs[i][-1]:
                                 euc_dist = np.sqrt(
                                     np.sum((k_objs - obj) ** 2, axis=1))
                                 if obj[-1] != k_objs[np.argmin(euc_dist)][
@@ -98,9 +97,15 @@ def detect(args, server, interval=1):
                     if obj[-1] == 1:
                         x_c, y_c = get_centres(obj[:4])
                         frame[y_c:y_c + 5, x_c:x_c + 5] = [0, 0, 255]
-                        print(x_c, y_c)
-                        server.send_data(
-                            'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1190))
+
+                        # start_sending = time.time()
+                        if sending_freq_counter % 10 == 0:
+                            server.send_data(
+                                'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1190))
+                            print(f"Point centres: ({x_c}, {y_c})")
+                            print(f"Frame no. :{sending_freq_counter}")
+
+                        # print(f"Time to send: {time.time() - start_sending}")
                         # robot.set_y_pos(x_c)
                         # robot.set_z_pos(y_c)
                 last_objects.insert(0, tracked_objects)
@@ -112,6 +117,7 @@ def detect(args, server, interval=1):
             if key & 0xFF == ord('q'):
                 break
         counter += 1
+        sending_freq_counter += 1
     cv2.destroyAllWindows()
 
 
@@ -137,7 +143,7 @@ def parse_args():
     parser.add_argument('--one-hand', action='store_true', default=False,
                         help='detect only one hand with the best prediction',
                         dest='one_hand')
-    parser.add_argument('--skip-frames', type=int, default=3,
+    parser.add_argument('--skip-frames', type=int, default=2,
                         help='take every k-th frame for calculation')
     parser.add_argument('--show-centres', action='store_true', default=False,
                         help='print centres of detection and draw it on frame')
@@ -163,7 +169,10 @@ if __name__ == '__main__':
 
         command = parser.check_users_message_correctness(command)
         if command == 'RETRACE':
-            detect(args, server)
+            # server.receiving_available = False
+            # server_receive_thread.join()
+            with torch.no_grad():
+                detect(args, server)
         elif command:
             server.send_data(command)
 
