@@ -1,105 +1,133 @@
 import socket
 
-from threading import Timer
 
-
-class ServerRobot:
+class ComServer:
     """
-    Server Class able to connect with only 1 client.
+    Server class which uses 'socket' module to set communication with client.
+    Maximum amount of client is 1. It is used to send specified commands to
+    Robot Client when requested and  receive confirmations or status info sent
+    by client.
+
+    FIELDS:
+        - sock
+        - server_info = (
+            communication_adapter_ip,
+            communication_port)
+        - connection
+        - client_ip
+        - server_running
+        - obtained_data
     """
 
-    # region FIELDS
-    sock = None
-    communication_adapter_ip = None
-    communication_port = None
-    server_info = None
-    connection = None
-    client_ip = None
-    check_connection_timer = None
-    checking_permitted = False
-
-    # Flags
-    server_running = False
-    client_connected = False
-
-    # endregion
-
-    def __init__(self, port=10002):
+    def __init__(self, command_parser, port=10002):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.communication_adapter_ip = self.get_hardware_ip()
         self.communication_port = port
         self.server_info = (
             self.communication_adapter_ip, self.communication_port)
-        # self.run_server()
+        self.connection = None
+        self.client_ip = None
+        self.server_running = False
+        self.command_parser = command_parser
+
+        self.sending_available = True
+        self.run_server()
 
     def run_server(self):
+        if self.server_running:
+            return None
+
         self.sock.bind(self.server_info)
-        print('Server Started!\n'
-              'Server info:\n  IP: {}\n  PORT: {}'.format(*self.server_info))
         self.server_running = True
 
-        # self.check_connection_timer = \
-        #     Timer(0.5, function=self.check_connection).start()
+        print('Server Started!\n'
+              'Server info:\n  IP: {}\n  PORT: {}'.format(*self.server_info))
 
-        # self.wait_for_robot_client()
+        self.wait_for_client()
 
-    def check_connection(self):
-        if self.checking_permitted:
-            self.send_message(verbose=False, timeout=0.0001)
-        else:
-            pass
+    def wait_for_client(self, timeout=1):
+        if not self.server_running:
+            return None
 
-        self.check_connection_timer = \
-            Timer(5, function=self.check_connection).start()
+        if self.client_ip:
+            return None
 
-    def wait_for_robot_client(self):
-        self.sock.listen(1)
         print('\nWaiting for client connection...')
+
+        self.sock.listen(1)
         self.connection, self.client_ip = self.sock.accept()
-        print('Succesfully connected to with {}'.format(self.client_ip))
-        self.client_connected = True
-        self.checking_permitted = True
-
-    def send_message(self, message='123', timeout=0.1, verbose=True):
-        if self.connection is not None:
-            message = message.encode('utf-8')
-            try:
-                self.connection.sendall(message)
-            except:
-                print('An error occured while sending data!')
-                return None
-            else:
-                return self.receive_confirmation(verbose, timeout)
-
-    def receive_confirmation(self, verbose=True, timeout=0.1):
-        self.checking_permitted = False
         self.connection.settimeout(timeout)
-        try:
-            confirmation = self.connection.recv(128)
-        except ConnectionAbortedError:
-            print('Connection has been aborted!')
-            self.client_disconnected()
 
+        print('Succesfully connected to {}'.format(self.client_ip))
+
+        self.receiving_available = True
+
+    def receive_data(self):
+        try:
+            received_data = self.connection.recv(128)
+        except ConnectionResetError:
+            self.client_disconnected()
             return None
         except socket.timeout:
             return None
         else:
-            self.connection.settimeout(None)
-            confirmation = confirmation.decode('utf-8')
-            if verbose:
-                print('Received confirmation: ', confirmation)
+            received_data = received_data.decode('utf-8')
+            if len(received_data) > 0:
+                if received_data[0] == '>':
+                    self.sending_available = True
 
-            return confirmation
-        finally:
-            self.checking_permitted = True
+                self.command_parser.interpret_received_msg(received_data)
+                return received_data
+            else:
+                self.client_disconnected()
+                return None
+
+    def send_data(self, command, verbose=True):
+        if self.sending_available:
+            if verbose:
+                print('Sent command: ', command)
+            command = command.encode('utf-8')
+            try:
+                self.connection.sendall(command)
+            except ConnectionAbortedError:
+                self.client_disconnected()
+            else:
+                self.sending_available = False
+        else:
+            print('Sending not available!')
 
     def client_disconnected(self):
         self.connection = None
         self.client_ip = None
-        self.client_connected = False
-        self.checking_permitted = False
-        print('There\'s no client connected.')
-        self.wait_for_robot_client()
+        self.wait_for_client()
+
+    def receive_thread(self):
+        while self.receiving_available:
+            try:
+                received_data = self.connection.recv(128)
+            except ConnectionResetError:
+                self.client_disconnected()
+            except socket.timeout:
+                pass
+            else:
+                received_data = received_data.decode('utf-8')
+                if len(received_data) > 0:
+                    print(received_data)
+                    if received_data[0] == '>':
+                        self.sending_available = True
+
+                    self.command_parser.interpret_received_msg(received_data)
+                else:
+                    self.client_disconnected()
+
+    def send_thread(self):
+        while True:
+            try:
+                command = input('Give command: ').encode('utf-8')
+                self.connection.sendall(command)
+            except ConnectionAbortedError:
+                self.client_disconnected()
+                break
 
     def get_hardware_ip(self):
         """
@@ -112,9 +140,3 @@ class ServerRobot:
         s.close()
 
         return server_ip
-
-
-if __name__ == '__main__':
-    Serv = ServerRobot()
-    while True:
-        Serv.send_message(input('Give message: '))
