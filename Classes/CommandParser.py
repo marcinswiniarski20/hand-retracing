@@ -7,16 +7,21 @@ class CommandParser:
             - IDL
             - MOV
             - STP
+            - RETRACE
         Getting info:
             - POS
             - HOM
+            - OVR
+            - ZON
+            - MOD
         Changing robot parameters:
             - SET
             - SPD
     """
 
     available_commands = (
-    'IDL', 'MOV', 'STP', 'POS', 'HOM', 'SET', 'SPD', 'RETRACE')
+        'IDL', 'MOV', 'STP', 'POS', 'HOM', 'SET', 'SPD', 'MOD', 'OVR', 'ZON',
+        'RETRACE', 'INFO')
 
     def __init__(self, robot):
         self.robot = robot
@@ -49,7 +54,7 @@ class CommandParser:
         except ValueError:
             return self.wrong_input_format_error()
         else:
-            if -600 < y < 600 < z < 1500:
+            if y in self.robot.zone['y'] and z in self.robot.zone['z']:
                 command_to_send = 'SET {:>5} {:>5}'.format(y, z)
                 return command_to_send
             else:
@@ -79,10 +84,49 @@ class CommandParser:
 
     def bad_position_error(self):
         print('Position arguments must be in ranges:',
-              '-500 < y < 500',
-              '500 < z < 1500', sep='\n')
+              'y: {}',
+              'z: {}'.format(self.robot.zone['y'], self.robot.zone['z']),
+              sep='\n')
         return False
 
     def wrong_speed_error(self):
         print('Speed to set must be in range (0,100].')
         return False
+
+    def interpret_received_msg(self, message):
+        command = message[2:5]
+
+        if command == 'IDL':
+            self.robot.mode = 'IDL'
+            self.robot.servo_state = 'Off'
+        elif command == 'MOV':
+            self.robot.mode = 'MOV'
+            self.robot.servo_state = 'On'
+        elif command == 'POS':
+            positions = message[5:].split()
+            self.robot.actual_pos['x_pos'] = int(float(positions[0]))
+            self.robot.actual_pos['y_pos'] = int(float(positions[1]))
+            self.robot.actual_pos['z_pos'] = int(float(positions[2]))
+        elif command == 'HOM':
+            positions = message[5:].split()
+            self.robot.p_home['x_pos'] = int(float(positions[0]))
+            self.robot.p_home['y_pos'] = int(float(positions[1]))
+            self.robot.p_home['z_pos'] = int(float(positions[2]))
+        elif command == 'ZON':
+            zone_ranges = [int(float(value)) for value in message[5:].split()]
+            self.robot.zone['x'] = range(zone_ranges[0], zone_ranges[1])
+            self.robot.zone['y'] = range(zone_ranges[2], zone_ranges[3])
+            self.robot.zone['z'] = range(zone_ranges[4], zone_ranges[5])
+        elif command == 'SPD':
+            self.robot.ovr = int(message.split()[-1])
+        elif command == 'MOD':
+            self.robot.mode = message.split()[-1]
+        elif command == 'OFF':
+            self.robot.mode = 'OFF'
+            self.robot.actual_pos['x_pos'] = self.robot.p_home['x_pos']
+            self.robot.actual_pos['y_pos'] = self.robot.p_home['y_pos']
+            self.robot.actual_pos['z_pos'] = self.robot.p_home['z_pos']
+            self.robot.ovr = 10
+            self.robot.servo_state = 'Off'
+        else:
+            pass

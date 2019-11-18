@@ -58,7 +58,7 @@ class ComServer:
         self.connection, self.client_ip = self.sock.accept()
         self.connection.settimeout(timeout)
 
-        print('Succesfully connected to {}'.format(self.client_ip))
+        print('Succesfully connected to {}'.format(self.client_ip[0]))
 
         self.receiving_available = True
 

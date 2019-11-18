@@ -1,29 +1,45 @@
 class Robot:
+    """
+    Robot calss which shows actual state of real manipulator. The robot we are
+    using is Mitsubishi RV-12SDL.
+    """
     # region Fields
-    p_home = None
+    p_home = {
+        'x_pos': None,
+        'y_pos': None,
+        'z_pos': None
+    }
+    last_pos = {
+        'x_pos': None,
+        'y_pos': None,
+        'z_pos': None
+    }
+    actual_pos = {
+        'x_pos': None,
+        'y_pos': None,
+        'z_pos': None
+    }
+    zone = {
+        'x': None,
+        'y': None,
+        'z': None
+    }
+    mode = None
     ovr = None
-    x_pos = None
-    y_pos = None
-    z_pos = None
-    mode = "START"
+    servo_state = None
 
     # endregion
 
-
     def show_robot_info(self):
-        pass
+        info_message = 'ROBOT INFO:\n' \
+                       ' Actual position:\n' \
+                       '     x: {}\n' \
+                       '     y: {}\n' \
+                       '     z: {}\n' \
+                       ' Speed: {}\n' \
+                       ' Work mode: {}'.format(
+            self.actual_pos['x_pos'], self.actual_pos['y_pos'],
+            self.actual_pos['z_pos'], self.ovr, self.mode)
 
-    def set_speed(self, speed):
-        self.ovr = speed
-
-    def set_x_pos(self, position):
-        self.x_pos = position
-
-    def set_y_pos(self, position):
-        self.y_pos = position
-
-    def set_z_pos(self, position):
-        self.z_pos = position
-
-    def set_mode(self, mode):
-        self.mode = mode
+        print(info_message)
+        return info_message

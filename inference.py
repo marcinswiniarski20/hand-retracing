@@ -10,7 +10,7 @@ from models import Darknet
 from inference_utils import *
 from sort import Sort
 
-from Classes.serv_v2 import ComServer
+from Classes.Server import ComServer
 from Classes.Robot import Robot
 from Classes.CommandParser import CommandParser
 from threading import Thread
@@ -101,7 +101,7 @@ def detect(args, server, interval=1):
                         # start_sending = time.time()
                         if sending_freq_counter % 10 == 0:
                             server.send_data(
-                                'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1190))
+                                'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1150))
                             print(f"Point centres: ({x_c}, {y_c})")
                             print(f"Frame no. :{sending_freq_counter}")
 
@@ -160,7 +160,6 @@ if __name__ == '__main__':
     server_receive_thread.start()
     x = 9
     while x != 10:
-        time.sleep(0.2)
         command = input('>>> ')
         if server.connection is None:
             print('There\'s no client connected. '

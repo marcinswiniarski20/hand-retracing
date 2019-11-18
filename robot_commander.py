@@ -144,7 +144,6 @@ def detect(arg):
                         robot.actual_pos['z_pos'] = \
                             int(z_prescaler * y_c + robot.p_home['z_pos'])
 
-
                 last_objects.insert(0, tracked_objects)
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
@@ -152,28 +151,37 @@ def detect(arg):
             key = cv2.waitKey(10)
             # print(f"Inference time: {time.time() - start_inference}")
             if key & 0xFF == ord('q'):
+                retracing = False
                 break
     cv2.destroyAllWindows()
 
 
 def send_point(send_interval=0.5):
     if server.sending_available:
-        server.send_data('SET {:>5} {:>5}'.format(robot.actual_pos['y_pos'],
-                                                  robot.actual_pos['z_pos']))
-    else:
-        print('Confirmation hasn\'t been received.')
+        if abs(robot.actual_pos['y_pos'] - robot.last_pos['y_pos']) > 30 \
+                or abs(
+            robot.actual_pos['z_pos'] - robot.last_pos['z_pos']) > 30:
+            server.send_data('SET {:>5} {:>5}'.format(robot.actual_pos['y_pos'],
+                                                      robot.actual_pos[
+                                                          'z_pos']))
+            robot.last_pos['y_pos'] = robot.actual_pos['y_pos']
+            robot.last_pos['z_pos'] = robot.actual_pos['z_pos']
 
-    if server.client_ip:
+    if server.client_ip and retracing:
         Timer(interval=send_interval, function=send_point).start()
 
 
-def setting_robot_actual_parameters(robot, server):
+def setting_robot_starting_parameters():
     if server.client_ip:
         start_info_commands = ('HOM', 'POS', 'OVR', 'ZON', "MOD")
         for command in start_info_commands:
             time.sleep(1)
             server.send_data(command, verbose=False)
             server.receive_data()
+
+        robot.last_pos['x_pos'] = robot.p_home['x_pos']
+        robot.last_pos['y_pos'] = robot.p_home['y_pos']
+        robot.last_pos['z_pos'] = robot.p_home['z_pos']
 
 
 def find_prescaler(robot, frame_width, frame_height):
@@ -190,12 +198,9 @@ robot = Robot()
 command_parser = CommandParser(robot)
 server = ComServer(command_parser)
 args = parse_args()
+retracing = False
 
-setting_robot_actual_parameters(robot, server)
-robot.show_robot_info()
-
-last_point_y = 0
-last_point_z = 650
+setting_robot_starting_parameters()
 
 server_receive_thread = Thread(target=server.receive_thread)
 server_receive_thread.start()
@@ -209,7 +214,11 @@ while True:
 
     command = command_parser.check_users_message_correctness(command)
     if command == 'RETRACE':
-        with torch.no_grad():
-            detect(args)
+        if robot.mode == 'MOV':
+            retracing = True
+            with torch.no_grad():
+                detect(args)
+    elif command == 'INFO':
+        robot.show_robot_info()
     elif command:
         server.send_data(command)

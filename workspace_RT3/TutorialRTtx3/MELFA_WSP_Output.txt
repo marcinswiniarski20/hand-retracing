@@ -151,3 +151,26 @@
 2019:11:07 01:15:13	:No syntax error.
 2019:11:07 01:19:08	:No syntax error.
 2019:11:07 01:26:19	:No syntax error.
+2019:11:08 09:48:14	:No syntax error.
+2019:11:08 09:50:24	:No syntax error.
+2019:11:08 09:50:48	:No syntax error.
+2019:11:08 09:53:21	:Syntax check Error
+	:Program	:ZONE.prg(Command:62)	:Dawid sie uczy	:PC	:62            On Com(1) GoSub *ReceiveInterrupt	:Jump destination does not exist
+2019:11:08 09:55:25	:Syntax check Error
+	:Program	:ZONE.prg(Command:84)	:Dawid sie uczy	:PC	:84            On Com(1) GoSub *ReceiveInterrupt	:Jump destination does not exist
+2019:11:08 10:04:12	:Syntax check Error
+	:Program	:RETRACE(Command:131)	:Dawid sie uczy	:Robot	:131            On Com(1) GoSub *ReceiveInterrupt	:Jump destination does not exist
+2019:11:08 10:10:07	:No syntax error.
+2019:11:08 10:10:17	:No syntax error.
+2019:11:08 10:13:11	:No syntax error.
+2019:11:08 10:13:59	:No syntax error.
+2019:11:08 10:16:16	:Syntax check Error
+	:Program	:RETRACE(Command:71)	:Dawid sie uczy	:Robot	:71        Case Is "IDL"	:Syntax error
+2019:11:08 10:16:25	:Syntax check Error
+	:Program	:RETRACE(Command:71)	:Dawid sie uczy	:Robot	:71        Case Is "IDL"	:Syntax error
+2019:11:08 10:16:54	:Syntax check Error
+	:Program	:RETRACE(Command:71)	:Dawid sie uczy	:Robot	:71        Case Is = "IDL"	:Syntax error
+2019:11:08 10:17:02	:Syntax check Error
+	:Program	:RETRACE(Command:71)	:Dawid sie uczy	:Robot	:71        Case == "IDL"	:Syntax error
+2019:11:08 10:20:17	:Syntax check Error
+	:Program	:RETRACE(Command:100)	:Dawid sie uczy	:Robot	:100 Case Is = "IDL"              ' MCNT <=10 	:Syntax error
