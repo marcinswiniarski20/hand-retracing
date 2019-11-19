@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--weights', type=str,
                         default='weights/full_dataset.pt',
                         help='path to weights file')
-    parser.add_argument('--source', type=str, default='0',
+    parser.add_argument('--source', type=str, default='data/zone_test.mp4',
                         help='source')
     parser.add_argument('--img-size', type=int, default=416,
                         help='inference size (pixels)')
@@ -147,7 +147,7 @@ def detect(arg, src='0'):
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
             cv2.imshow(weights, frame)
-            key = cv2.waitKey(10)
+            key = cv2.waitKey(1)
             # print(f"Inference time: {time.time() - start_inference}")
             if key & 0xFF == ord('q'):
                 print('Finished retracing! Waiting for another command.')

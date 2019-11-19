@@ -11,10 +11,10 @@
 	<ScreenRect>
 		<Screen160>
 			<AdditionalInfo/>
-			<Left>45</Left>
-			<Top>66</Top>
-			<Right>797</Right>
-			<Bottom>706</Bottom>
+			<Left>0</Left>
+			<Top>2</Top>
+			<Right>524</Right>
+			<Bottom>416</Bottom>
 		</Screen160>
 	</ScreenRect>
 </Workspace>

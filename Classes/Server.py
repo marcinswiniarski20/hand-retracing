@@ -19,7 +19,7 @@ class ComServer:
         - obtained_data
     """
 
-    def __init__(self, command_parser, port=10002):
+    def __init__(self, command_parser, port=10001):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.communication_adapter_ip = self.get_hardware_ip()
         self.communication_port = port
