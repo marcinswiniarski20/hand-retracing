@@ -1,4 +1,4 @@
-import socket
+import socket, time
 
 
 class ComServer:
@@ -60,7 +60,18 @@ class ComServer:
 
         print('Succesfully connected to {}'.format(self.client_ip[0]))
 
-        self.receiving_available = True
+        start_info_commands = ('5', '4', '8', '7', '9')
+        for command in start_info_commands:
+            time.sleep(1)
+            self.send_data(command, verbose=False)
+            self.receive_data()
+
+        self.command_parser.robot.last_pos['x_pos'] = \
+            self.command_parser.robot.p_home['x_pos']
+        self.command_parser.robot.last_pos['y_pos'] = \
+            self.command_parser.robot.p_home['y_pos']
+        self.command_parser.robot.last_pos['z_pos'] = \
+            self.command_parser.robot.p_home['z_pos']
 
     def receive_data(self):
         try:
@@ -102,7 +113,7 @@ class ComServer:
         self.wait_for_client()
 
     def receive_thread(self):
-        while self.receiving_available:
+        while True:
             try:
                 received_data = self.connection.recv(128)
             except ConnectionResetError:

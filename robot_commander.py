@@ -49,8 +49,8 @@ def parse_args():
     return parser.parse_args()
 
 
-def detect(arg):
-    weights, source, img_size, one_hand = arg.weights, arg.source, arg.img_size, arg.one_hand
+def detect(arg, src='0'):
+    weights, source, img_size, one_hand = arg.weights, src, arg.img_size, arg.one_hand
     device = select_device(use_cpu=False, enable_benchmark=True)
     model = Darknet(arg.cfg, img_size)
     model.load_state_dict(torch.load(weights, map_location=device)['model'])
@@ -67,7 +67,7 @@ def detect(arg):
 
     if source == "0":
         source = 0
-    cap = cv2.VideoCapture(source)
+    cap = cv2.VideoCapture('./data/' + source)
     cap.set(cv2.CAP_PROP_FPS, 10)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not cap.isOpened():
@@ -87,7 +87,6 @@ def detect(arg):
 
     tracker = Sort(min_hits=1)
     last_objects = []
-    print(fps)
     Timer(interval=1, function=send_point).start()
     while cap.isOpened():
         # start_inference = time.time()
@@ -151,6 +150,7 @@ def detect(arg):
             key = cv2.waitKey(10)
             # print(f"Inference time: {time.time() - start_inference}")
             if key & 0xFF == ord('q'):
+                print('Finished retracing! Waiting for another command.')
                 retracing = False
                 break
     cv2.destroyAllWindows()
@@ -158,10 +158,10 @@ def detect(arg):
 
 def send_point(send_interval=0.5):
     if server.sending_available:
-        if abs(robot.actual_pos['y_pos'] - robot.last_pos['y_pos']) > 30 \
+        if abs(robot.actual_pos['y_pos'] - robot.last_pos['y_pos']) > accuracy \
                 or abs(
-            robot.actual_pos['z_pos'] - robot.last_pos['z_pos']) > 30:
-            server.send_data('SET {:>5} {:>5}'.format(robot.actual_pos['y_pos'],
+            robot.actual_pos['z_pos'] - robot.last_pos['z_pos']) > accuracy:
+            server.send_data('0 {:>5} {:>5}'.format(robot.actual_pos['y_pos'],
                                                       robot.actual_pos[
                                                           'z_pos']))
             robot.last_pos['y_pos'] = robot.actual_pos['y_pos']
@@ -170,18 +170,6 @@ def send_point(send_interval=0.5):
     if server.client_ip and retracing:
         Timer(interval=send_interval, function=send_point).start()
 
-
-def setting_robot_starting_parameters():
-    if server.client_ip:
-        start_info_commands = ('HOM', 'POS', 'OVR', 'ZON', "MOD")
-        for command in start_info_commands:
-            time.sleep(1)
-            server.send_data(command, verbose=False)
-            server.receive_data()
-
-        robot.last_pos['x_pos'] = robot.p_home['x_pos']
-        robot.last_pos['y_pos'] = robot.p_home['y_pos']
-        robot.last_pos['z_pos'] = robot.p_home['z_pos']
 
 
 def find_prescaler(robot, frame_width, frame_height):
@@ -198,9 +186,9 @@ robot = Robot()
 command_parser = CommandParser(robot)
 server = ComServer(command_parser)
 args = parse_args()
-retracing = False
 
-setting_robot_starting_parameters()
+accuracy = 30
+retracing = False
 
 server_receive_thread = Thread(target=server.receive_thread)
 server_receive_thread.start()
@@ -213,12 +201,15 @@ while True:
         continue
 
     command = command_parser.check_users_message_correctness(command)
+
     if command == 'RETRACE':
-        if robot.mode == 'MOV':
-            retracing = True
-            with torch.no_grad():
-                detect(args)
+        retracing = True
+        src = command_parser.choose_available_video()
+        with torch.no_grad():
+                detect(args, src)
     elif command == 'INFO':
         robot.show_robot_info()
+    elif type(command) == list and command[0] == 'ACC':
+        accuracy = int(command[1])
     elif command:
-        server.send_data(command)
+        server.send_data(command, verbose=False)
