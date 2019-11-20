@@ -153,6 +153,9 @@ class CommandParser:
 
         if command == 'IDL':
             self.robot.mode = 'IDL'
+            self.robot.actual_pos['x_pos'] = self.robot.p_home['x_pos']
+            self.robot.actual_pos['y_pos'] = self.robot.p_home['y_pos']
+            self.robot.actual_pos['z_pos'] = self.robot.p_home['z_pos']
             self.robot.servo_state = 'Off'
         elif command == 'MOV':
             self.robot.mode = 'MOV'

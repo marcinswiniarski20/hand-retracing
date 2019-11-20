@@ -158,7 +158,7 @@ def detect(arg, src='0'):
     cv2.destroyAllWindows()
 
 
-def send_point(send_interval=0.5):
+def send_point(send_interval=0.33):
     if server.sending_available:
         if abs(robot.actual_pos['y_pos'] - robot.last_pos['y_pos']) > accuracy \
                 or abs(
