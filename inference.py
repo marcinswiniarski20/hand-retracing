@@ -15,6 +15,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def detect():
+    start_saving = False
     weights, source, img_size, one_hand = args.weights, args.source, args.img_size, args.one_hand
     device = select_device(use_cpu=False, enable_benchmark=True)
     model = Darknet(args.cfg, img_size)
@@ -84,10 +85,15 @@ def detect():
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
             cv2.imshow(weights, frame)
-            key = cv2.waitKey(1)
+            if start_saving:
+                cv2.imwrite(f"./testy_praca/{counter}.jpeg")
+            key = cv2.waitKey(0)
             # print(f"Inference time: {time.time() - start_inference}")
             if key & 0xFF == ord('q'):
                 break
+            if key & 0xFF == ord('s'):
+                start_saving = True
+
         counter += 1
     cv2.destroyAllWindows()
 
@@ -104,7 +110,7 @@ def parse_args():
     parser.add_argument('--half', action='store_true', help='half precision FP16 inference')
     parser.add_argument('--one-hand', action='store_true', default=False,
                         help='detect only one hand with the best prediction', dest='one_hand')
-    parser.add_argument('--skip-frames', type=int, default=3, help='take every k-th frame for calculation')
+    parser.add_argument('--skip-frames', type=int, default=2, help='take every k-th frame for calculation')
     parser.add_argument('--show-centres', action='store_true', default=False,
                         help='print centres of detection and draw it on frame')
     return parser.parse_args()
