@@ -1,5 +1,0 @@
-classes=1
-train=/home/165631ms/datasets/labels/train_cls.txt
-valid=/home/165631ms/datasets/labels/test_cls.txt
-names=data/ego.names
-backup=backup/

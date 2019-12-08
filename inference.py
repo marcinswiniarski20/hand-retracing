@@ -7,7 +7,7 @@ import os
 
 from operator import itemgetter
 from models import Darknet
-from inference_utils import *
+from utils.inference_utils import *
 from sort import Sort
 
 from Classes.Server import ComServer
@@ -123,14 +123,14 @@ def detect(args, server, interval=1):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--cfg', type=str, default='cfg/yolov3_hand-spp.cfg',
+    parser.add_argument('--cfg', type=str, default='nn_data/yolov3_hand-spp.cfg',
                         help='cfg file path')
-    parser.add_argument('--data', type=str, default='data/ego.data',
+    parser.add_argument('--data', type=str, default='nn_data/yolo.data',
                         help='.data file path')
     parser.add_argument('--weights', type=str,
                         default='weights/full_dataset.pt',
                         help='path to weights file')
-    parser.add_argument('--source', type=str, default='data/two_hands_test.mp4',
+    parser.add_argument('--source', type=str, default='videos/two_hands_test.mp4',
                         help='source')
     parser.add_argument('--img-size', type=int, default=416,
                         help='inference size (pixels)')
