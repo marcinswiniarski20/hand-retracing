@@ -2,7 +2,6 @@
 .idea/*
 __pycache__/*
 */__pycache__*
-weights/*
 lab_dataset/*
 lab_dataset.zip
 custom_data.zip
