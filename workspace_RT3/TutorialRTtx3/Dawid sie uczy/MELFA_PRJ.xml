@@ -42,17 +42,17 @@
 		</Screen230>
 		<Screen392>
 			<AdditionalInfo>FIRSTONE</AdditionalInfo>
-			<Left>375</Left>
-			<Top>98</Top>
-			<Right>1015</Right>
-			<Bottom>498</Bottom>
+			<Left>26</Left>
+			<Top>26</Top>
+			<Right>666</Right>
+			<Bottom>426</Bottom>
 		</Screen392>
 		<Screen490>
 			<AdditionalInfo/>
-			<Left>1267</Left>
-			<Top>498</Top>
-			<Right>1580</Right>
-			<Bottom>811</Bottom>
+			<Left>1221</Left>
+			<Top>116</Top>
+			<Right>1534</Right>
+			<Bottom>429</Bottom>
 		</Screen490>
 		<Screen392>
 			<AdditionalInfo>ACC</AdditionalInfo>
@@ -164,7 +164,8 @@
 	<RCtype>3</RCtype>
 	<MECHA1>RV-12SDL</MECHA1>
 	<RLNG>2</RLNG>
-	<Localization> </Localization>
+	<Localization>
+	</Localization>
 	<Travel_prm_set>0</Travel_prm_set>
 	<Travel_use>0</Travel_use>
 	<Travel_direct>0</Travel_direct>

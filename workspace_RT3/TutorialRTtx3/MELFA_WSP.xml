@@ -3,7 +3,6 @@
 	<Workspace_Title/>
 	<Workspace_Vertion>1.3.2</Workspace_Vertion>
 	<Workspace_Date>2019/10/14 14:59:01</Workspace_Date>
-	<Project>Dawid sie uczy</Project>
 	<Display3D>
 		<RobotModelType>0</RobotModelType>
 	</Display3D>
@@ -11,10 +10,11 @@
 	<ScreenRect>
 		<Screen160>
 			<AdditionalInfo/>
-			<Left>45</Left>
-			<Top>66</Top>
-			<Right>797</Right>
-			<Bottom>706</Bottom>
+			<Left>32</Left>
+			<Top>-14</Top>
+			<Right>556</Right>
+			<Bottom>400</Bottom>
 		</Screen160>
 	</ScreenRect>
+	<Project>Dawid sie uczy</Project>
 </Workspace>
