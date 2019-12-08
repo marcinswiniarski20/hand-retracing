@@ -16,6 +16,7 @@ class ComServer:
         - connection
         - client_ip
         - server_running
+        - command_parser
         - obtained_data
     """
 
