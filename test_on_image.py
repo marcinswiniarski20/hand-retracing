@@ -38,7 +38,7 @@ def detect(args, interval=1):
 
     if source == "0":
         source = 0
-    cap = cv2.VideoCapture("./test_data/LAB/%02d.jpg", cv2.CAP_IMAGES)
+    cap = cv2.VideoCapture("./test_data/test_%03d.jpg", cv2.CAP_IMAGES)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not cap.isOpened():
         print("Error opening video stream!")
@@ -73,7 +73,7 @@ def detect(args, interval=1):
                     label = f"{classes[int(cls)]} {conf:.2f}"
                     plot_one_box(xyxy, frame, label=label,
                                  color=colors[int(cls)])
-            cv2.imwrite(f"./test_data/LAB/output_{counter}.jpg", frame)
+            cv2.imwrite(f"./test_data/output_{counter}.jpg", frame)
             key = cv2.waitKey(1)
             # print(f"Inference time: {time.time() - start_inference}")
             if key & 0xFF == ord('q'):
