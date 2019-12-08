@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def detect(args, server, interval=1):
+def detect(args):
     weights, source, img_size, one_hand = args.weights, args.source, args.img_size, args.one_hand
     device = select_device(use_cpu=False, enable_benchmark=True)
     model = Darknet(args.cfg, img_size)
@@ -97,17 +97,6 @@ def detect(args, server, interval=1):
                     if obj[-1] == 1:
                         x_c, y_c = get_centres(obj[:4])
                         frame[y_c:y_c + 5, x_c:x_c + 5] = [0, 0, 255]
-
-                        # start_sending = time.time()
-                        if sending_freq_counter % 10 == 0:
-                            server.send_data(
-                                'SET {:>5} {:>5}'.format(x_c - 300, -y_c + 1150))
-                            print(f"Point centres: ({x_c}, {y_c})")
-                            print(f"Frame no. :{sending_freq_counter}")
-
-                        # print(f"Time to send: {time.time() - start_sending}")
-                        # robot.set_y_pos(x_c)
-                        # robot.set_z_pos(y_c)
                 last_objects.insert(0, tracked_objects)
                 if len(last_objects) > 10:
                     last_objects.pop(-1)
@@ -152,27 +141,5 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    robot = Robot()
-    parser = CommandParser(robot)
-    server = ComServer(robot)
-
-    server_receive_thread = Thread(target=server.receive_thread)
-    server_receive_thread.start()
-    x = 9
-    while x != 10:
-        command = input('>>> ')
-        if server.connection is None:
-            print('There\'s no client connected. '
-                  'Keep waiting for connection...')
-            continue
-
-        command = parser.check_users_message_correctness(command)
-        if command == 'RETRACE':
-            # server.receiving_available = False
-            # server_receive_thread.join()
-            with torch.no_grad():
-                detect(args, server)
-        elif command:
-            server.send_data(command)
-
-        print(robot.p_home)
+    with torch.no_grad():
+        detect(args)
