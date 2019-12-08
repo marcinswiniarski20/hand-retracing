@@ -1,1 +1,1 @@
-Download weights from https://drive.google.com/drive/folders/13dR95VeJ93o_1TiHjWg_dhR_zhvd6mSj and extract in this directory.
+Download weights from https://drive.google.com/file/d/1A3qcJnHByh0VxzxqyUmeu51IBkz8pQYl/view?usp=sharing and extract in this directory.
