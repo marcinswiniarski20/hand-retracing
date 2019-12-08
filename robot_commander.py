@@ -68,6 +68,8 @@ def detect(arg, src='0'):
     if source == "0":
         source = 0
         cap = cv2.VideoCapture(source)
+    elif source == "1":
+        cap = cv2.VideoCapture('ip')
     else:
         cap = cv2.VideoCapture('./data/' + source)
     cap.set(cv2.CAP_PROP_FPS, 10)
