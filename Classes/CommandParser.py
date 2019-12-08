@@ -191,7 +191,7 @@ class CommandParser:
             pass
 
     def choose_available_video(self):
-        available_videos = [video for video in os.listdir('./data')
+        available_videos = [video for video in os.listdir('./videos')
                             if video.endswith('.mp4')]
 
         available_videos.append('Laptop camera.')

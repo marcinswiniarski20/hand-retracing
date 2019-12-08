@@ -71,7 +71,7 @@ def detect(arg, src='0'):
     elif source == "1":
         cap = cv2.VideoCapture('ip')
     else:
-        cap = cv2.VideoCapture('./data/' + source)
+        cap = cv2.VideoCapture('./videos/' + source)
     cap.set(cv2.CAP_PROP_FPS, 10)
     fps = cap.get(cv2.CAP_PROP_FPS)
     if not cap.isOpened():
