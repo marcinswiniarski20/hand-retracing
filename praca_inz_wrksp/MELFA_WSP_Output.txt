@@ -1,0 +1,2 @@
+2019:11:27 01:24:51	:Syntax check Error
+	:Program	:FIRSTONE(Command:141)	:Dawid sie uczy	:Robot	:141 SetPo	:Syntax error
